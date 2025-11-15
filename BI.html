@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard — Pro</title>
+<!-- Use your existing styles by linking styles.css, plus embedded enhancement styles -->
+<!-- If you have an external styles.css, keep the link; the embedded <style> extends it. -->
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ========== Enhancements and page-specific styles ========== */
+/* Reuse your :root variables from styles.css if present; otherwise define fallback */
+:root{
+  --sidebar-bg: #0f172a; /* dark slate */
+  --accent: var(--primary-color, #06b6d4);
+  --muted: var(--text-light, #64748b);
+  --card-bg: var(--bg-white, #fff);
+  --glass: rgba(255,255,255,0.06);
+  --success: var(--success-color, #10b981);
+  --danger: var(--error-color, #ef4444);
+  --rounded: 12px;
+}
+
+/* Fullscreen app layout */
+html,body { height:100%; }
+.app {
+  display:flex;
+  min-height:100vh;
+  background: linear-gradient(180deg, rgba(6,182,212,0.03), transparent 30%), var(--bg-light);
+  color: var(--text-dark);
+  transition: background .3s ease;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width:280px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  color:#fff;
+  padding:28px 18px;
+  background-color: var(--sidebar-bg);
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  transition: width .22s ease;
+}
+.sidebar.collapsed { width:80px; }
+.brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.brand .logo {
+  width:54px; height:54px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:18px; color:white; background: linear-gradient(135deg,var(--accent), #06b6d4);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.35);
+}
+.brand h2 {
+  font-size:18px; margin:0; color: #fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.menu {
+  display:flex; flex-direction:column; gap:6px; margin-top:6px;
+}
+.menu button, .menu a {
+  display:flex; gap:12px; align-items:center;
+  padding:10px; border-radius:10px; color:#dbeafe; background:transparent; border: none; text-decoration:none; cursor:pointer;
+  font-weight:600;
+}
+.menu button:hover, .menu a:hover { background: rgba(255,255,255,0.04); }
+.menu button.active, .menu a.active { background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); color: #fff; }
+
+/* collapse icons only */
+.sidebar.collapsed .label { display:none; }
+.sidebar .chev {
+  margin-left:auto; opacity:.85;
+}
+
+/* Topbar & Content */
+.main {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+.topbar {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:18px 28px; background:transparent; border-bottom:1px solid rgba(15,23,42,0.04);
+}
+.search {
+  display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; background:var(--card-bg); width:420px; max-width:60%;
+  box-shadow: var(--shadow);
+}
+.search input { border:0; outline:none; background:transparent; width:100%; font-size:14px; }
+.top-actions { display:flex; gap:10px; align-items:center; }
+
+/* Avatar */
+.avatar {
+  width:44px; height:44px; border-radius:999px; overflow:hidden; display:inline-block; cursor:pointer;
+  border:2px solid rgba(255,255,255,0.06);
+}
+.avatar img { width:100%; height:100%; object-fit:cover; }
+
+/* Content area */
+.content {
+  padding:28px; overflow:auto;
+}
+.grid {
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:20px;
+  align-items:start;
+}
+
+/* Card (re-usable) */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--rounded);
+  padding:18px;
+  box-shadow: var(--shadow);
+}
+.card h3 { margin:0 0 8px 0; font-size:18px; color:var(--text-dark); }
+
+/* PROFILE */
+.profile-top { display:flex; gap:16px; align-items:center; }
+.profile-meta { flex:1; }
+.meta-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; color:var(--muted); }
+.edit-actions { display:flex; gap:10px; margin-top:12px; }
+
+/* FORM STYLING */
+.form-row { display:flex; gap:12px; margin-bottom:12px; }
+.form-col { flex:1; display:flex; flex-direction:column; gap:6px; }
+.input {
+  padding:10px 12px; border-radius:10px; border:1px solid var(--border-color); font-size:14px; background:var(--bg-white);
+}
+.input:focus { outline:none; border-color:var(--accent); box-shadow:0 8px 20px rgba(6,182,212,0.08); }
+
+/* PAYMENT */
+.card-list { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+.card-item {
+  display:flex; justify-content:space-between; gap:12px; align-items:center; padding:12px; border-radius:10px; border:1px solid rgba(15,23,42,0.04);
+}
+.card-brand { font-weight:700; color:var(--muted); }
+.card-mask { font-family:monospace; letter-spacing:2px; }
+
+/* CODE INPUTS */
+.code-inputs { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+.code-inputs input { width:48px; height:56px; text-align:center; font-size:22px; border-radius:8px; border:1px solid var(--border-color); }
+
+/* TOAST */
+.toast {
+  position:fixed; right:20px; bottom:20px; background: rgba(15,23,42,0.94); color:white; padding:12px 16px; border-radius:10px; box-shadow:var(--shadow-lg);
+  transform: translateY(12px);
+  opacity:0; pointer-events:none; transition: all .28s ease;
+}
+.toast.show { opacity:1; transform:none; pointer-events:auto; }
+
+/* MODAL (basic) */
+.modal-backdrop { position:fixed; inset:0; background:rgba(2,6,23,0.5); display:flex; align-items:center; justify-content:center; z-index:50; }
+.modal { width:720px; max-width:96%; background:var(--card-bg); border-radius:12px; padding:18px; box-shadow:var(--shadow-lg); }
+
+/* Responsive */
+@media (max-width: 1040px) {
+  .grid { grid-template-columns: 1fr; }
+  .search { width:320px; }
+}
+@media (max-width: 720px) {
+  .sidebar { display:none; }
+  .topbar { padding:12px; }
+  .search { width:100%; max-width:none; }
+  .main { padding-bottom:80px; }
+}
+
+/* Dark mode variations (toggle) */
+body.dark {
+  --bg-light: #051923;
+  --card-bg: #071826;
+  --text-dark: #e6eef8;
+  --text-light: #94a3b8;
+  --border-color: rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(6,182,212,0.02), rgba(0,0,0,0.2));
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="logo" title="Brand">GV</div>
+      <div class="label">
+        <h2>WHATTODO</h2>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6)">Event spaces & bookings</div>
+      </div>
+    </div>
+
+    <nav class="menu" role="navigation" aria-label="Dashboard menu">
+      <button class="active" data-section="overview" aria-pressed="true"><span>🏠</span><span class="label">Overview</span><span class="chev">›</span></button>
+      <button data-section="profile"><span>👤</span><span class="label">Profile</span><span class="chev">›</span></button>
+      <button data-section="settings"><span>⚙️</span><span class="label">Settings</span><span class="chev">›</span></button>
+      <button data-section="payments"><span>💳</span><span class="label">Payments</span><span class="chev">›</span></button>
+      <button data-section="verify"><span>✉️</span><span class="label">Verify Email</span><span class="chev">›</span></button>
+      <button data-section="reservations"><span>📅</span><span class="label">Reservations</span><span class="chev">›</span></button>
+      <div style="flex:1"></div>
+      <button id="collapseBtn" title="Collapse sidebar">⬅️<span class="label">Collapse</span></button>
+      <li><a href="index.html" class="nav-link">Back To The Homepage </a></li>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button id="mobileMenuBtn" style="display:none">☰</button>
+        <div class="search" role="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 21l-4.35-4.35" stroke="#64748b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <input id="searchInput" placeholder="Search users, bookings, cards..." aria-label="Search">
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn btn-secondary" id="newReservationBtn">+ New Reservation</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn" id="themeToggle" title="Toggle dark mode">🌓</button>
+          <div class="avatar" title="Open profile" id="avatarBtn" tabindex="0" aria-haspopup="true">
+            <img id="avatarImg" src="" alt="avatar">
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <section class="content" id="content">
+      <!-- Overview -->
+      <div id="overview" class="card section active">
+        <h3>Dashboard Overview</h3>
+        <p style="color:var(--muted)">Quick stats and recent activity.</p>
+        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+          <div class="card" style="flex:1;min-width:200px">
+            <h4>Upcoming Reservations</h4>
+            <p style="color:var(--muted)">3 scheduled over the next 7 days</p>
+          </div>
+          <div class="card" style="width:220px">
+            <h4>Revenue (Month)</h4>
+            <p style="font-weight:700">€8,420</p>
+          </div>
+          <div class="card" style="width:220px">
+            <h4>Active Cards</h4>
+            <p style="font-weight:700" id="countCards">2</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="profile" class="card section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3>Profile</h3>
+          <div style="color:var(--muted)">Member since: <strong>Jan 2024</strong></div>
+        </div>
+
+        <div class="profile-top" style="margin-top:14px">
+          <div>
+            <div class="avatar" style="width:96px;height:96px">
+              <img id="profileAvatar" src="" alt="profile avatar">
+            </div>
+            <div style="margin-top:8px">
+              <label for="avatarUpload" class="btn btn-secondary" style="margin-top:8px;display:inline-block;cursor:pointer">Change Avatar</label>
+              <input id="avatarUpload" type="file" accept="image/*" style="display:none">
+            </div>
+          </div>
+
+          <div class="profile-meta">
+            <h2 id="fullName">Samuel Ilunga</h2>
+            <div class="meta-row">
+              <div><strong>Email:</strong> <span id="emailText">example@email.com</span></div>
+              <div><strong>Phone:</strong> <span id="phoneText">+90 555 123 4567</span></div>
+            </div>
+
+            <div class="edit-actions">
+              <button class="btn btn-primary" id="editProfileBtn">Edit Profile</button>
+              <button class="btn btn-secondary" id="downloadProfileBtn">Download vCard</button>
+            </div>
+          </div>
+        </div>
+
+        <hr style="margin:18px 0; border:none; height:1px; background:rgba(15,23,42,0.04)">
+
+        <div id="profileEditArea" style="display:none; margin-top:6px">
+          <form id="profileForm">
+            <div class="form-row">
+              <div class="form-col">
+                <label>Full name</label>
+                <input class="input" id="inputName" required>
+              </div>
+              <div class="form-col">
+                <label>Email</label>
+                <input class="input" id="inputEmail" type="email" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-col">
+                <label>Phone</label>
+                <input class="input" id="inputPhone" type="tel">
+              </div>
+              <div class="form-col">
+                <label>Organization</label>
+                <input class="input" id="inputOrg">
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btn-primary" type="submit">Save</button>
+              <button class="btn btn-secondary" id="cancelProfileEdit" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="settings" class="card section" style="display:none">
+        <h3>Settings</h3>
+        <div style="margin-top:12px;display:grid;grid-template-columns:1fr 320px;gap:16px">
+          <div>
+            <div class="card" style="margin-bottom:12px">
+              <h4>Security</h4>
+              <form id="passwordForm">
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input class="input" id="currentPass" type="password" placeholder="Current password">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input class="input" id="newPass" type="password" placeholder="New password">
+                  <input class="input" id="confirmPass" type="password" placeholder="Confirm">
+                </div>
+                <div style="margin-top:8px">
+                  <button class="btn btn-primary" type="submit">Change password</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <h4>Notifications</h4>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+                <label><input type="checkbox" id="notifyEmail"> Email notifications</label>
+                <label><input type="checkbox" id="notifySMS"> SMS notifications</label>
+                <label><input type="checkbox" id="notifyPush"> Push notifications</label>
+              </div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card">
+              <h4>Preferences</h4>
+              <label style="display:block;margin-top:8px">Language</label>
+              <select id="langSelect" class="input" style="padding:8px">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="tr">Türkçe</option>
+              </select>
+
+              <div style="margin-top:12px">
+                <label><input type="checkbox" id="compactMode"> Compact layout</label>
+              </div>
+
+              <div style="margin-top:12px">
+                <label>Theme</label>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button class="btn btn-secondary" id="lightBtn">Light</button>
+                  <button class="btn btn-secondary" id="darkBtn">Dark</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div id="payments" class="card section" style="display:none">
+        <h3>Payment Methods</h3>
+        <p style="color:var(--muted)">Manage saved cards and add a new one (mock, no real processing).</p>
+
+        <div class="card" style="margin-top:12px">
+          <h4>Saved Cards</h4>
+          <div class="card-list" id="cardList"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h4>Add new card</h4>
+          <form id="cardForm">
+            <div class="form-row">
+              <div class="form-col">
+                <label>Card number</label>
+                <input class="input" id="cardNumber" placeholder="4242 4242 4242 4242" inputmode="numeric" maxlength="19">
+              </div>
+              <div style="width:140px">
+                <label>Exp</label>
+                <input class="input" id="cardExp" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div style="width:120px">
+                <label>CVC</label>
+                <input class="input" id="cardCvc" placeholder="123" maxlength="4" inputmode="numeric">
+              </div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btn-primary" type="submit">Save card</button>
+              <button class="btn btn-secondary" type="button" id="testStripeBtn">Mock Stripe Pay</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- VERIFY EMAIL -->
+      <div id="verify" class="card section" style="display:none">
+        <h3>Email Verification</h3>
+        <p style="color:var(--muted)">Enter the 6-digit code we sent to <strong id="verifyEmailText">example@email.com</strong>.</p>
+
+        <div class="code-inputs" id="codeInputs">
+          <input inputmode="numeric" maxlength="1" class="input code">
+          <input inputmode="numeric" maxlength="1" class="input code">
+          <input inputmode="numeric" maxlength="1" class="input code">
+          <input inputmode="numeric" maxlength="1" class="input code">
+          <input inputmode="numeric" maxlength="1" class="input code">
+          <input inputmode="numeric" maxlength="1" class="input code">
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+          <button class="btn btn-primary" id="verifyBtn">Verify</button>
+          <button class="btn btn-secondary" id="resendBtn">Resend code</button>
+        </div>
+
+        <p id="resendNotice" style="color:var(--muted);text-align:center;margin-top:8px"></p>
+      </div>
+
+      <!-- RESERVATIONS (simple sample) -->
+      <div id="reservations" class="card section" style="display:none">
+        <h3>Reservations</h3>
+        <p style="color:var(--muted)">Simple list and quick new-reservation modal.</p>
+        <div id="reservationsList" style="margin-top:12px"></div>
+      </div>
+
+    </section>
+  </main>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- MODAL TEMPLATE (hidden) -->
+<div id="modalRoot" style="display:none"></div>
+
+<script>
+/* ========== App Logic ========== */
+/* Utilities */
+function qs(sel, root=document) { return root.querySelector(sel); }
+function qsa(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
+function showToast(msg, timeout=3000) {
+  const t = qs('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=> t.classList.remove('show'), timeout);
+}
+
+/* Persistence: use localStorage for demo */
+const STORE = {
+  load(key, fallback){ try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch(e){ return fallback; } },
+  save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+};
+
+/* Initial demo data */
+const demoProfile = STORE.load('profile', {
+  name: 'Samuel Ilunga',
+  email: 'example@email.com',
+  phone: '+90 555 123 4567',
+  org: 'Codigo',
+  avatar: '' // dataURL
+});
+const demoSettings = STORE.load('settings', {
+  lang:'en', notifyEmail:true, notifySMS:true, notifyPush:false, compact:false, theme:'light'
+});
+const demoCards = STORE.load('cards', [
+  {brand:'Visa', last4:'4421', exp:'09/26'},
+  {brand:'Mastercard', last4:'9930', exp:'04/25'}
+]);
+const demoReservations = STORE.load('reservations', [
+  {id:1, name:'John Doe', date:'2025-11-20', time:'18:00', guests:120},
+]);
+
+/* Sidebar nav */
+const menuBtns = qsa('.menu button');
+function setActiveSection(name){
+  // hide all sections
+  qsa('.section').forEach(s => s.style.display='none');
+  const el = qs('#' + name);
+  if(el) el.style.display = 'block';
+  // active menu
+  menuBtns.forEach(b => { b.classList.toggle('active', b.dataset.section===name); b.setAttribute('aria-pressed', b.dataset.section===name); });
+}
+menuBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const sec = btn.dataset.section;
+    setActiveSection(sec);
+  });
+});
+
+/* Collapse sidebar */
+const sidebar = qs('#sidebar');
+qs('#collapseBtn').addEventListener('click', ()=>{
+  sidebar.classList.toggle('collapsed');
+});
+
+/* Theme toggle */
+const themeToggle = qs('#themeToggle');
+function applyTheme(theme){
+  if(theme==='dark') document.body.classList.add('dark'); else document.body.classList.remove('dark');
+  demoSettings.theme = theme; STORE.save('settings', demoSettings);
+}
+applyTheme(demoSettings.theme || 'light');
+qs('#lightBtn').addEventListener('click', ()=> applyTheme('light'));
+qs('#darkBtn').addEventListener('click', ()=> applyTheme('dark'));
+themeToggle.addEventListener('click', ()=> applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'));
+
+/* Populate profile */
+function renderProfile(){
+  qs('#fullName').textContent = demoProfile.name;
+  qs('#emailText').textContent = demoProfile.email;
+  qs('#phoneText').textContent = demoProfile.phone || '—';
+  const avatarEl = qs('#profileAvatar');
+  const avatarImg = demoProfile.avatar || '';
+  avatarEl.src = avatarImg || 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='#e2e8f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#64748b' font-size='40'>GV</text></svg>`);
+  qs('#avatarImg').src = avatarEl.src;
+  // form inputs
+  qs('#inputName').value = demoProfile.name;
+  qs('#inputEmail').value = demoProfile.email;
+  qs('#inputPhone').value = demoProfile.phone || '';
+  qs('#inputOrg').value = demoProfile.org || '';
+}
+renderProfile();
+
+/* Avatar upload */
+qs('#avatarUpload').addEventListener('change', (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    demoProfile.avatar = reader.result;
+    STORE.save('profile', demoProfile);
+    renderProfile();
+    showToast('Avatar mis à jour');
+  };
+  reader.readAsDataURL(f);
+});
+
+/* Profile edit */
+qs('#editProfileBtn').addEventListener('click', ()=> {
+  qs('#profileEditArea').style.display = 'block';
+  qs('#profile').scrollIntoView({behavior:'smooth'});
+});
+qs('#cancelProfileEdit').addEventListener('click', ()=> {
+  qs('#profileEditArea').style.display = 'none';
+});
+qs('#profileForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  demoProfile.name = qs('#inputName').value.trim() || demoProfile.name;
+  demoProfile.email = qs('#inputEmail').value.trim() || demoProfile.email;
+  demoProfile.phone = qs('#inputPhone').value.trim();
+  demoProfile.org = qs('#inputOrg').value.trim();
+  STORE.save('profile', demoProfile);
+  renderProfile();
+  qs('#profileEditArea').style.display = 'none';
+  showToast('Profil sauvegardé');
+});
+
+/* Download vCard */
+qs('#downloadProfileBtn').addEventListener('click', ()=>{
+  const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${demoProfile.name}
+ORG:${demoProfile.org || ''}
+TEL;TYPE=WORK,VOICE:${demoProfile.phone || ''}
+EMAIL:${demoProfile.email}
+END:VCARD`;
+  const blob = new Blob([vcard], {type:'text/vcard'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${demoProfile.name.replace(/\s+/g,'_')}.vcf`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  showToast('vCard downloaded');
+});
+
+/* Settings */
+function renderSettings(){
+  qs('#langSelect').value = demoSettings.lang || 'en';
+  qs('#notifyEmail').checked = !!demoSettings.notifyEmail;
+  qs('#notifySMS').checked = !!demoSettings.notifySMS;
+  qs('#notifyPush').checked = !!demoSettings.notifyPush;
+  qs('#compactMode').checked = !!demoSettings.compact;
+}
+renderSettings();
+qs('#langSelect').addEventListener('change', (e)=>{ demoSettings.lang = e.target.value; STORE.save('settings', demoSettings); showToast('Language saved'); });
+qs('#notifyEmail').addEventListener('change', (e)=>{ demoSettings.notifyEmail = e.target.checked; STORE.save('settings', demoSettings); });
+qs('#notifySMS').addEventListener('change', (e)=>{ demoSettings.notifySMS = e.target.checked; STORE.save('settings', demoSettings); });
+qs('#notifyPush').addEventListener('change', (e)=>{ demoSettings.notifyPush = e.target.checked; STORE.save('settings', demoSettings); });
+qs('#compactMode').addEventListener('change', (e)=>{ demoSettings.compact = e.target.checked; STORE.save('settings', demoSettings); showToast('Layout preference saved'); });
+
+/* Password form (mock) */
+qs('#passwordForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const newP = qs('#newPass').value;
+  const confirm = qs('#confirmPass').value;
+  if(newP.length < 6){ showToast('Password must be at least 6 characters'); return; }
+  if(newP !== confirm){ showToast('Passwords do not match'); return; }
+  // mock change
+  qs('#currentPass').value = qs('#newPass').value = qs('#confirmPass').value = '';
+  showToast('Password updated (mock)');
+});
+
+/* Cards render */
+function renderCards(){
+  const container = qs('#cardList');
+  container.innerHTML = '';
+  demoCards.forEach((c, idx) => {
+    const div = document.createElement('div'); div.className='card-item';
+    div.innerHTML = `<div>
+      <div class="card-brand">${c.brand}</div>
+      <div class="card-mask">**** **** **** ${c.last4} • ${c.exp}</div>
+    </div>
+    <div>
+      <button class="btn btn-secondary" data-idx="${idx}" style="margin-right:8px">Make default</button>
+      <button class="btn" data-del="${idx}">Remove</button>
+    </div>`;
+    container.appendChild(div);
+  });
+  qs('#countCards').textContent = demoCards.length;
+  // bind remove
+  qsa('[data-del]').forEach(b => b.addEventListener('click', (e)=>{
+    const i = Number(e.currentTarget.dataset.del);
+    demoCards.splice(i,1);
+    STORE.save('cards', demoCards);
+    renderCards();
+    showToast('Card removed');
+  }));
+}
+renderCards();
+
+/* Add card (basic client-side validation) */
+qs('#cardForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const num = qs('#cardNumber').value.replace(/\s+/g,'');
+  const exp = qs('#cardExp').value.trim();
+  const cvc = qs('#cardCvc').value.trim();
+  if(num.length < 12 || !/^\d+$/.test(num)){ showToast('Enter a valid card number'); return; }
+  if(!/^\d{3,4}$/.test(cvc)){ showToast('Enter a valid CVC'); return; }
+  // mask
+  const last4 = num.slice(-4);
+  const brand = num.startsWith('4') ? 'Visa' : (num.startsWith('5') ? 'Mastercard' : 'Card');
+  demoCards.push({brand, last4, exp: exp || '—'});
+  STORE.save('cards', demoCards);
+  renderCards();
+  qs('#cardForm').reset();
+  showToast('Card saved (mock)');
+});
+
+/* Mock "Stripe" button */
+qs('#testStripeBtn').addEventListener('click', ()=> showToast('This would open Stripe checkout (mock)'));
+
+/* Email verification inputs */
+const codeInputs = qsa('.code');
+codeInputs.forEach((inp, i) => {
+  inp.addEventListener('input', (e)=>{
+    if(e.data && /[0-9]/.test(e.data) && i < codeInputs.length-1) codeInputs[i+1].focus();
+  });
+  inp.addEventListener('keydown', (e)=>{
+    if(e.key === 'Backspace' && !inp.value && i>0) codeInputs[i-1].focus();
+  });
+});
+let resendCooldown = 0; let resendTimerId;
+function setResendNotice(){
+  const el = qs('#resendNotice');
+  if(resendCooldown > 0) el.textContent = `Resend available in ${resendCooldown}s`; else el.textContent = '';
+}
+qs('#resendBtn').addEventListener('click', ()=>{
+  if(resendCooldown>0) return;
+  resendCooldown = 30;
+  clearInterval(resendTimerId);
+  resendTimerId = setInterval(()=> {
+    resendCooldown--;
+    setResendNotice();
+    if(resendCooldown<=0) clearInterval(resendTimerId);
+  },1000);
+  setResendNotice();
+  showToast('Verification code resent (mock)');
+});
+qs('#verifyBtn').addEventListener('click', ()=>{
+  const code = codeInputs.map(i=>i.value).join('');
+  if(code.length < 6){ showToast('Please enter 6 digits'); return; }
+  showToast('Email verified (mock)');
+});
+
+/* Reservations render + new */
+function renderReservations(){
+  const el = qs('#reservationsList');
+  el.innerHTML = '';
+  if(demoReservations.length === 0) el.innerHTML = '<div style="color:var(--muted)">No reservations yet</div>';
+  demoReservations.forEach(r=>{
+    const div = document.createElement('div'); div.className='card'; div.style.marginBottom='8px';
+    div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>${r.name}</strong><div style="color:var(--muted)">${r.date} • ${r.time} • ${r.guests} guests</div></div>
+      <div><button class="btn btn-secondary" data-id="${r.id}">Details</button></div>
+    </div>`;
+    el.appendChild(div);
+  });
+}
+renderReservations();
+
+/* New reservation button open modal */
+qs('#newReservationBtn').addEventListener('click', ()=>{
+  openModal(`<h3>New Reservation</h3>
+    <form id="quickResForm">
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input class="input" id="resName" placeholder="Name" required>
+        <input class="input" id="resGuests" placeholder="Guests" type="number" value="50">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input class="input" id="resDate" type="date" required>
+        <input class="input" id="resTime" type="time" required>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" type="submit">Create</button>
+        <button class="btn btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+      </div>
+    </form>`, true);
+
+  qs('#quickResForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = qs('#resName').value || 'Guest';
+    const guests = qs('#resGuests').value || 1;
+    const date = qs('#resDate').value; const time = qs('#resTime').value;
+    const id = Date.now();
+    demoReservations.push({id,name,guests,date,time});
+    STORE.save('reservations', demoReservations);
+    renderReservations();
+    closeModal();
+    showToast('Reservation created (mock)');
+  });
+});
+
+/* Modal helpers */
+function openModal(html, append=false){
+  const root = qs('#modalRoot'); root.style.display='block';
+  root.innerHTML = `<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal">${html}</div>
+  </div>`;
+}
+function closeModal(){ const root=qs('#modalRoot'); root.innerHTML=''; root.style.display='none'; }
+
+/* Download avatar fallback */
+if(!demoProfile.avatar){
+  // show initials image
+  const initials = (demoProfile.name || 'GV').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='#e2e8f0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#64748b' font-size='48'>${initials}</text></svg>`;
+  demoProfile.avatar = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  STORE.save('profile', demoProfile);
+  renderProfile();
+}
+
+/* Search input quick filter (demo) */
+qs('#searchInput').addEventListener('input', (e)=>{
+  const v = e.target.value.toLowerCase();
+  // quick demo: if user types 'cards' jump to payments
+  if(v.includes('card') || v.includes('payment')) setActiveSection('payments');
+});
+
+/* Wire up menu initial */
+setActiveSection('overview');
+
+/* Logout (mock) */
+qsa('[data-section="logout"]').forEach(b => b.addEventListener('click', ()=> showToast('Logged out (mock)')));
+
+/* Expose closeModal to inline onclick in modal markup */
+window.closeModal = closeModal;
+
+/* Initial counts */
+renderCards();
+renderReservations();
+
+/* Small accessibility: pressing Escape closes open modal */
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>
